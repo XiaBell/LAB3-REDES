@@ -220,6 +220,8 @@ _start:
     ;   uint32_t sin_addr;    // +4  ← INADDR_ANY = 0
     ;   char     sin_zero[8]; // +8
     ; };
+    movzx ecx, r15w                        ; restaurar puerto desde r15d (cx fue destruido por syscall)
+    rol   cx, 8                            ; volver a network byte order
     mov  word  [server_addr + 0], AF_INET  ; sin_family = 2
     mov  word  [server_addr + 2], cx       ; sin_port (network order)
     mov  dword [server_addr + 4], 0        ; sin_addr = 0.0.0.0 (todas las IFs)
@@ -296,6 +298,7 @@ _start:
     sub  rax, rdx              ; rax = nro de bytes antes del '|'
 
     ; ── ¿Tipo == "SUB"? ───────────────────────────────────────
+    mov  r12, rax              ; guardar longitud del tipo (rax será sobreescrito por strncmp3_fn)
     cmp  rax, 3
     jne  .chk_pub
 
@@ -319,7 +322,7 @@ _start:
 
 .chk_pub:
     ; ── ¿Tipo == "PUB"? ───────────────────────────────────────
-    cmp  rax, 3
+    cmp  r12, 3                ; usar longitud guardada (no rax que fue sobreescrito)
     jne  .unknown_type
 
     lea  rdi, [recv_buf]
