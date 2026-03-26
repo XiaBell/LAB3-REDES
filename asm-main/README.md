@@ -1,80 +1,100 @@
-# Brokers en Assembly x86-64
-### Laboratorio 3 – Análisis Capa de Transporte y Sockets
+# Lab 3 – Sockets en Assembler (x86-64)
 
-Implementación en lenguaje ensamblador NASM de los brokers TCP y UDP
-del sistema publicación-suscripción de noticias deportivas.
+Sistema pub-sub de noticias deportivas implementado en NASM para Linux.
+Tiene tres versiones: TCP, UDP y QUIC (bono). Cada una tiene su broker, publisher y subscriber.
 
-## Estructura del proyecto
+## Estructura
 
 ```
-asm/
+asm-main/
 ├── Makefile
-├── README.md
 ├── src/
-│   ├── broker_tcp.asm   ← broker TCP con select() sin hilos
-│   └── broker_udp.asm   ← broker UDP con recvfrom loop
-└── bin/                 ← generado al compilar
-    ├── broker_tcp
-    └── broker_udp
+│   ├── broker_tcp.asm
+│   ├── broker_udp.asm
+│   ├── subscriber_udp.asm
+│   ├── broker_quic.asm
+│   ├── publisher_quic.asm
+│   └── subscriber_quic.asm
+└── bin/          ← se genera al compilar
 ```
 
 ## Requisitos
 
-| Herramienta | Versión mínima | Instalar (Debian/Ubuntu) |
-|---|---|---|
-| NASM | 2.14 | `sudo apt install nasm` |
-| binutils (ld) | 2.30 | `sudo apt install binutils` |
-| Linux x86-64 | kernel ≥ 3.x | — |
-
-## Compilar
+Necesitas Linux x86-64 con `nasm`, `binutils` y `make`. Si estás en Mac o Windows usá Docker:
 
 ```bash
-# Compilar ambos brokers
-make
-
-# Solo TCP
-make tcp
-
-# Solo UDP
-make udp
-
-# Limpiar binarios y objetos
-make clean
+docker run --rm -it --platform linux/amd64 -v "$(pwd)":/app -w /app ubuntu:22.04 bash
+apt update && apt install -y nasm binutils make
 ```
 
-## Ejecutar
+---
+
+## TCP
+
+> pendiente
+
+---
+
+## UDP
+
+> pendiente
+
+---
+
+## QUIC (bono)
+
+QUIC usa UDP por debajo pero le agrega confirmaciones de entrega (ACK), retransmisión automática si no llega el ACK, y números de secuencia para detectar mensajes perdidos o desordenados.
+
+### Compilar
 
 ```bash
-# Terminal 1 – Broker TCP
-./bin/broker_tcp 9000
-
-# Terminal 2 – Broker UDP
-./bin/broker_udp 9001
+make quic
 ```
 
-## Protocolo de mensajes
+### Desplegar
 
-| Dirección | Formato | Acción |
-|---|---|---|
-| Cliente → Broker | `SUB\|<tema>\n` | Suscribirse al tema |
-| Cliente → Broker | `PUB\|<tema>\|<msg>\n` | Publicar evento |
-| Broker → Suscriptor | `MSG\|<tema>\|<msg>\n` | Reenvío del broker |
+Necesitás 4 terminales. Abrí cada una con `docker exec -it <ID> bash` (el ID lo ves con `docker ps`).
 
-Ejemplo de tema: `EquipoA_vs_EquipoB`
+**Terminal 1 – Broker** (arrancá este primero):
+```bash
+./bin/broker_quic 9002
+```
 
-## Syscalls utilizados
+**Terminal 2 – Suscriptor 1:**
+```bash
+./bin/subscriber_quic 127.0.0.1 9002 9200 partido1
+```
 
-| # | Nombre | Uso |
-|---|---|---|
-| 0 | sys_read | Leer datos de clientes TCP (stream) |
-| 1 | sys_write | Log en stdout |
-| 3 | sys_close | Cerrar conexiones |
-| 23 | sys_select | Multiplexar múltiples FDs (TCP) |
-| 41 | sys_socket | Crear socket TCP/UDP |
-| 43 | sys_accept | Aceptar nueva conexión TCP |
-| 44 | sys_sendto | Enviar datos/datagramas |
-| 45 | sys_recvfrom | Recibir datagramas UDP |
-| 49 | sys_bind | Asociar socket a puerto |
-| 50 | sys_listen | Modo escucha (TCP) |
-| 54 | sys_setsockopt | Opciones de socket |
-| 60 | sys_exit | Terminar proceso |
+**Terminal 3 – Suscriptor 2:**
+```bash
+./bin/subscriber_quic 127.0.0.1 9002 9201 partido1
+```
+
+**Terminal 4 – Publisher** (acá escribís los mensajes):
+```bash
+./bin/publisher_quic 127.0.0.1 9002 partido1
+```
+
+Cuando aparezca el prompt escribí el evento y presioná Enter:
+```
+[QUIC-PUB] Escribe el evento (Ctrl+D para salir):
+Gol de EquipoA al minuto 23
+```
+
+### Qué debería verse
+
+Publisher confirma entrega:
+```
+[QUIC-PUB] Enviando seq=1 ...
+[QUIC-PUB] seq=1 -> ACK ok, mensaje confirmado
+```
+
+Broker recibe y reenvía:
+```
+[Broker QUIC] DATA seq=1 tema=partido1 : Gol de EquipoA al minuto 23 -> ACK enviado
+```
+
+Suscriptores reciben con estado de orden:
+```
+[QUIC-SUB] seq=1 [partido1] : Gol de EquipoA al minuto 23 (en orden)
+```
