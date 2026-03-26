@@ -20,7 +20,7 @@ asm-main/
 
 ## Requisitos
 
-Necesitas Linux x86-64 con `nasm`, `binutils` y `make`. Si estás en Mac o Windows usá Docker:
+Se Necesita Linux x86-64 con `nasm`, `binutils` y `make`. Si estás en Mac o Windows debes usar Docker:
 
 ```bash
 docker run --rm -it --platform linux/amd64 -v "$(pwd)":/app -w /app ubuntu:22.04 bash
@@ -53,9 +53,9 @@ make quic
 
 ### Desplegar
 
-Necesitás 4 terminales. Abrí cada una con `docker exec -it <ID> bash` (el ID lo ves con `docker ps`).
+Se necesitan 4 terminales. Abrir cada una con `docker exec -it <ID> bash` (el ID lo ves con `docker ps`).
 
-**Terminal 1 – Broker** (arrancá este primero):
+**Terminal 1 – Broker** (arrancar este primero):
 ```bash
 ./bin/broker_quic 9002
 ```
@@ -70,12 +70,12 @@ Necesitás 4 terminales. Abrí cada una con `docker exec -it <ID> bash` (el ID l
 ./bin/subscriber_quic 127.0.0.1 9002 9201 partido1
 ```
 
-**Terminal 4 – Publisher** (acá escribís los mensajes):
+**Terminal 4 – Publisher** (acá se escriben los mensajes):
 ```bash
 ./bin/publisher_quic 127.0.0.1 9002 partido1
 ```
 
-Cuando aparezca el prompt escribí el evento y presioná Enter:
+Cuando aparezca el prompt escribir el evento y presionar Enter:
 ```
 [QUIC-PUB] Escribe el evento (Ctrl+D para salir):
 Gol de EquipoA al minuto 23
