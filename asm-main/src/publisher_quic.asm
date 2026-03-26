@@ -9,6 +9,9 @@
 ; Eso es basicamente lo que hace QUIC: usar UDP pero agregando confirmaciones
 ; de entrega (ACK) y reenvio automatico (retransmision) a mano.
 ;
+; El ACK usa el seq del publicador; el broker asigna otro seq monotonico por tema
+; en los MSG a suscriptores si hay varios publicadores del mismo partido.
+;
 ; El flujo de cada mensaje es:
 ;   1. Leer una linea del teclado
 ;   2. Armar el paquete: [num_secuencia][tipo DATA][longitud_tema][tema][mensaje]

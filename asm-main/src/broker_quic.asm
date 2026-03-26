@@ -27,7 +27,8 @@
 ;     [6..] nombre del partido
 ;
 ;   Broker reenvía a suscriptores (TYPE_MSG):
-;     [0-3] mismo numero de secuencia del DATA original
+;     [0-3] numero de secuencia asignado por el broker (monotonico por tema)
+;           asi varios publicadores del mismo partido no repiten el mismo seq
 ;     [4]   tipo = 0x04
 ;     [5]   longitud del nombre del partido
 ;     [6..] nombre del partido + el mensaje
@@ -74,8 +75,10 @@ default rel
 %define TYPE_MSG       0x04
 
 %define MAX_SUBS       32
+%define MAX_TOPICS     32          ; temas distintos con contador de seq propio
 %define BUF_SIZE       512
 %define MAX_TOPIC      64
+%define TOPIC_ENTRY_SIZE (MAX_TOPIC + 4)   ; nombre + dword siguiente seq
 
 ; cada entrada en la tabla de suscriptores ocupa 96 bytes
 ; guarda: si esta activo, ip, puerto, nombre del partido
@@ -159,6 +162,8 @@ out_buf      resb BUF_SIZE    ; aca construimos el MSG antes de mandarlo
 ack_buf      resb 8           ; aca construimos el ACK (solo 5 bytes)
 tema_tmp     resb 70          ; copia del nombre del partido con null al final
 num_buf      resb 16
+topic_entries resb MAX_TOPICS * TOPIC_ENTRY_SIZE
+emergency_seq resd 1          ; si la tabla de temas esta llena (raro)
 
 section .text
     global _start
@@ -336,10 +341,15 @@ _start:
     call print_cstr_fn
     write_lit s_ack_sent, s_ack_sent_l
 
+    ; seq en MSG: broker lo asigna por tema (varios pubs en el mismo partido)
+    lea  rdi, [tema_tmp]
+    call topic_next_seq_fn
+    mov  r15d, eax
+
     ; reenviar el mensaje a todos los suscriptores del tema
     lea  rdi, [tema_tmp]
     mov  rsi, r14
-    mov  edx, r12d
+    mov  edx, r15d
     call broadcast_quic_fn
 
     jmp  .main_loop
@@ -456,6 +466,80 @@ register_sub_fn:
     write_lit s_full, s_full_len
 
 .rs_done:
+    pop  r14
+    pop  r13
+    pop  r12
+    pop  rbx
+    ret
+
+; topic_next_seq_fn(rdi=tema cstr null-terminated)
+; devuelve eax = numero de secuencia para TYPE_MSG en ese tema
+; mantiene un contador por tema (hasta MAX_TOPICS entradas)
+topic_next_seq_fn:
+    push rbx
+    push r12
+    push r13
+    push r14
+
+    mov  r12, rdi
+    xor  ebx, ebx
+    mov  r13d, -1
+
+.tns_search:
+    cmp  ebx, MAX_TOPICS
+    jge  .tns_done_search
+
+    mov  rax, rbx
+    imul rax, TOPIC_ENTRY_SIZE
+    lea  r14, [topic_entries + rax]
+
+    cmp  byte [r14], 0
+    je   .tns_empty
+
+    mov  rdi, r14
+    mov  rsi, r12
+    call strcmp_fn
+    test rax, rax
+    je   .tns_match
+
+    inc  ebx
+    jmp  .tns_search
+
+.tns_empty:
+    cmp  r13d, 0
+    jge  .tns_empty_skip
+    mov  r13d, ebx
+.tns_empty_skip:
+    inc  ebx
+    jmp  .tns_search
+
+.tns_done_search:
+    cmp  r13d, 0
+    jl   .tns_emergency
+
+    mov  ebx, r13d
+    mov  rax, rbx
+    imul rax, TOPIC_ENTRY_SIZE
+    lea  r14, [topic_entries + rax]
+
+    mov  rdi, r14
+    mov  rsi, r12
+    mov  rcx, MAX_TOPIC - 1
+    call strncpy_fn
+    mov  dword [r14 + MAX_TOPIC], 2
+    mov  eax, 1
+    jmp  .tns_out
+
+.tns_match:
+    mov  eax, dword [r14 + MAX_TOPIC]
+    inc  dword [r14 + MAX_TOPIC]
+    jmp  .tns_out
+
+.tns_emergency:
+    inc  dword [emergency_seq]
+    mov  eax, dword [emergency_seq]
+
+.tns_out:
     pop  r14
     pop  r13
     pop  r12

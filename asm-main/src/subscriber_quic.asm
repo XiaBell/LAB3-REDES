@@ -2,8 +2,9 @@
 ; Suscriptor QUIC - lab 3
 ;
 ; Se registra en el broker y recibe mensajes del partido.
-; Lleva un contador del ultimo seq recibido para saber si se perdio algun mensaje
-; o si llego alguno repetido (eso es lo que agrega QUIC sobre UDP normal).
+; El seq en TYPE_MSG lo pone el broker y es monotonico por tema, asi varios
+; publicadores del mismo partido no generan seq duplicados en el suscriptor.
+; Con eso se detecta perdida/desorden entre mensajes del flujo agregado.
 ;
 ; Uso: ./subscriber_quic <broker_ip> <broker_puerto> <mi_puerto> <tema>
 ; Compilar:
