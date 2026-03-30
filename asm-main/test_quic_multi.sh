@@ -1,6 +1,6 @@
 #!/bin/bash
-# Prueba: 1 broker QUIC, 2 suscriptores y 2 publicadores (mismo tema).
-# Cumple escenario tipo lab (varios procesos simultaneos). Requiere `make quic`.
+# Prueba: 1 broker QUIC, 2 suscriptores (9200/9201) y 2 publicadores; tema "partido-demo".
+# Salidas en /tmp/qbrk.log, qsub*.log, qpub*.log. Requiere: make quic.
 set -e
 cd "$(dirname "$0")"
 

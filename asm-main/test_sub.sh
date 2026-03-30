@@ -1,4 +1,7 @@
 #!/bin/bash
+# Prueba mínima UDP: broker + un suscriptor; los PUB los manda netcat (no usa publisher_udp).
+# Requisitos: make udp (o al menos broker_udp + subscriber_udp), comando nc.
+# Ejecutar desde asm-main/: ./test_sub.sh
 cd "$(dirname "$0")"
 
 pkill -f broker_udp 2>/dev/null

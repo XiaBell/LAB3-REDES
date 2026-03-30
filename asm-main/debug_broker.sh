@@ -1,4 +1,6 @@
 #!/bin/bash
+# Depuración: broker UDP con strace solo en recvfrom (ver buffer y errno).
+# Requisitos: bin/broker_udp, strace, nc. Ejecutar desde asm-main/.
 cd "$(dirname "$0")"
 pkill -f broker_udp 2>/dev/null; sleep 0.3
 
