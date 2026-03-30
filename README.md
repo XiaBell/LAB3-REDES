@@ -1,6 +1,6 @@
 # Lab 3 – Sockets en Assembler (x86-64)
 
-Práctica de **redes / sockets** en **NASM** con syscalls de **Linux x86-64** (sin la API de sockets de C). El mismo esquema (publicador–broker–suscriptor, temas tipo “partido”) está en **TCP**, **UDP** y **QUIC de laboratorio** (bono).
+Práctica de redes, sockets en NASM con syscalls de **Linux x86-64** (sin la API de sockets de C). El mismo esquema (publicador–broker–suscriptor, temas tipo “partido”) está en **TCP**, **UDP** y **QUIC de laboratorio** (bono).
 
 **QUIC aquí** no es el protocolo IETF de internet: es **UDP** binario con **ACK** al publicador y **secuencias** hacia suscriptores (`broker_quic.asm`, `publisher_quic.asm`, `subscriber_quic.asm`).
 
