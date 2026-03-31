@@ -1,6 +1,6 @@
 # Lab 3 – Sockets en Assembler (x86-64)
 
-Práctica de **redes / sockets** en **NASM** con syscalls de **Linux x86-64** (sin la API de sockets de C). El mismo esquema (publicador–broker–suscriptor, temas tipo “partido”) está en **TCP**, **UDP** y **QUIC de laboratorio** (bono).
+Práctica de **redes / sockets** en **NASM** con syscalls de **Linux x86-64**. El mismo esquema (publicador–broker–suscriptor, temas tipo “partido”) está en **TCP**, **UDP** y **QUIC de laboratorio** (bono).
 
 **QUIC aquí** no es el protocolo IETF de internet: es **UDP** binario con **ACK** al publicador y **secuencias** hacia suscriptores (`broker_quic.asm`, `publisher_quic.asm`, `subscriber_quic.asm`).
 
@@ -9,7 +9,7 @@ Práctica de **redes / sockets** en **NASM** con syscalls de **Linux x86-64** (s
 ## Mac, Windows o Linux: cómo está pensado el repo
 
 - Puedes **clonar y editar** el proyecto en **cualquier sistema** (Mac, Windows, Linux). Los `.asm` son texto; no “pertenecen” a un solo fabricante de PC.
-- El **Makefile** genera ejecutables **ELF para Linux x86-64** (no son aplicaciones nativas de macOS ni `.exe` de Windows). Eso es lo que pide el laboratorio.
+- El **Makefile** genera ejecutables **ELF para Linux x86-64** (no son aplicaciones nativas de macOS ni `.exe` de Windows).
 - La forma **prevista de compilar y ejecutar** es **siempre con Docker**: dentro del contenedor hay un Linux donde corren `nasm`, `ld`, `make` y los binarios en `./bin/`. Así no hace falta instalar un toolchain complejo en el Mac o en Windows.
 - Si el código se escribió o probó en un **Mac**, el binario resultante es igualmente **Linux**; en Mac no conviene ejecutar esos ELF fuera de Docker salvo que sepas lo que haces.
 
@@ -30,6 +30,7 @@ LAB3-REDES/
     │   └── broker_quic.asm, publisher_quic.asm, subscriber_quic.asm
     ├── bin/                  ← se genera al compilar (objetos y ejecutables)
     ├── test_sub.sh           ← prueba UDP con netcat
+    ├── test_tcp_lab.sh       ← broker + 2 subs + 2 pubs TCP (10 mensajes/tema)
     ├── test_quic_multi.sh    ← varios procesos QUIC
     └── debug_broker.sh       ← broker UDP + strace (opcional)
 ```
@@ -167,6 +168,13 @@ make clean
 
 Atajos: `make run_tcp`, `make run_sub_tcp`, `make run_pub_tcp`.
 
+Prueba automática (dos temas **partidoA** / **partidoB**, 10 mensajes por publicador; salidas en `/tmp/tcp_*.log`):
+
+```bash
+chmod +x test_tcp_lab.sh
+./test_tcp_lab.sh
+```
+
 **UDP**
 
 ```bash
@@ -195,6 +203,7 @@ Ejemplo de mensajes en consola (cadenas definidas en el código): el publicador 
 
 | Script | Qué hace | Dependencias |
 |--------|-----------|----------------|
+| **`test_tcp_lab.sh`** | Broker TCP puerto 9000, dos suscriptores (**partidoA**, **partidoB**) y dos publicadores con 10 mensajes cada uno. | `make tcp` |
 | **`test_sub.sh`** | Levanta `broker_udp` y un `subscriber_udp`, envía dos **PUB** con **`nc`**, muestra salidas en `/tmp`. | `bin/broker_udp`, `bin/subscriber_udp`, comando **`nc`** |
 | **`test_quic_multi.sh`** | Un broker QUIC, dos suscriptores y dos publicadores al tema **`partido-demo`**; registros en `/tmp`. | `make quic` antes; **`chmod +x`** si hace falta |
 | **`debug_broker.sh`** | Arranca **`broker_udp`** bajo **`strace`** filtrando `recvfrom` para ver qué llega al syscall. | `bin/broker_udp`, **`strace`**, **`nc`** |
