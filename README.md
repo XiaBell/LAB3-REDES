@@ -1,6 +1,6 @@
 # Lab 3 – Sockets en Assembler (x86-64)
 
-Práctica de **redes / sockets** en **NASM** con syscalls de **Linux x86-64**. El mismo esquema (publicador–broker–suscriptor, temas tipo “partido”) está en **TCP**, **UDP** y **QUIC de laboratorio** (bono).
+Práctica de **redes / sockets** en **NASM** con syscalls de **Linux x86-64** (sin la API de sockets de C). El mismo esquema (publicador–broker–suscriptor, temas tipo "partido") está en **TCP**, **UDP** y **QUIC de laboratorio** (bono).
 
 **QUIC aquí** no es el protocolo IETF de internet: es **UDP** binario con **ACK** al publicador y **secuencias** hacia suscriptores (`broker_quic.asm`, `publisher_quic.asm`, `subscriber_quic.asm`).
 
@@ -45,8 +45,6 @@ LAB3-REDES/
 | Targets `make`, `make tcp`, `make run_*`, variables `PORT_*`, `TOPIC` | **`asm-main/Makefile`** (comentarios al inicio) |
 | Propósito del programa, **uso en línea de comandos**, cómo compilarlo a mano, syscalls y formato de mensajes | **Cabecera** de cada archivo en **`asm-main/src/*.asm`** (primeros bloques de comentarios `;`) |
 
-Los comentarios dentro del código (etiquetas, fragmentos de lógica) están en los `.asm` según fue necesario en el desarrollo; no hace falta duplicar todo aquí.
-
 ---
 
 ## Protocolo (resumen; el detalle está en los `.asm`)
@@ -68,7 +66,9 @@ Los comentarios dentro del código (etiquetas, fragmentos de lógica) están en 
 
 El **Makefile** define por defecto `BROKER_IP=127.0.0.1`, `TOPIC=partido1` y los puertos de la tabla siguiente.
 
----
+--- 
+
+EN ADELANTE SE ENCUENTRAN INSTRUCCIONES Y REQUERIMIENTOS MUY ESPECÍFICOS EN CASO DE QUE LOS NECESITE PARA QUE PUEDA DEPSLEGAR Y UTILIZAR CORRECTAMENTE EL PROYECTO, SE PENSÓ PARA PODER DESARROLLAR EN CUALQUIER AMBIENTE MEDIANTE CONTENEDORES (Dado que las integrantes de este grupo de por sí poseen distintos sistemas operativos).
 
 ## Requisitos en tu máquina (solo Docker)
 
